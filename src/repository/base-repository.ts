@@ -1,4 +1,7 @@
 import { FindOptions, Model, ModelCtor } from "sequelize";
+const DEFAULT_LIMIT = 20;
+const DEFAULT_OFFSET = 0;
+const MAX_LIMIT = 1000;
 
 // /**
 //    * Create a new record
@@ -65,7 +68,17 @@ export class BaseRepository<M extends Model<M>> {
    * @returns A promise of an array of records found
    */
   public async find(findOptions?: FindOptions<M>, options?: any): Promise<M[]> {
-    const result = await this.entityModel.findAll(findOptions);
+    const limit = findOptions.limit 
+      ? findOptions.limit > MAX_LIMIT 
+        ? MAX_LIMIT 
+        : findOptions.limit
+      : DEFAULT_LIMIT
+    const offset = findOptions.offset ? findOptions.offset : DEFAULT_OFFSET
+    const result = await this.entityModel.findAll({
+      ...findOptions,
+      limit,
+      offset
+    });
 
     return result;
   }

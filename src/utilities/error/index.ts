@@ -28,7 +28,7 @@ export const ErrorMessages = {
   },
 };
 
-export class Errors extends Error {
+export class BaseError extends Error {
   public status: StatusCode;
   public code: ErrorCode;
   public message: string;
@@ -42,5 +42,7 @@ export class Errors extends Error {
 
     this.status = errorMessages.statusCode;
     this.code = errorMessages.errorCode;
+
+    Error.captureStackTrace(this);
   }
 }

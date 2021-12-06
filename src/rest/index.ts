@@ -1,15 +1,19 @@
 import cors from "cors";
 import express from "express";
-import { ErrorCode, Errors } from "@utilities/error";
-import logger from "@utilities/logger";
+import { ErrorCode, BaseError } from "@utilities/error";
+import { logger } from "@utilities/logger";
 import {router as api} from './api';
+import { GlobalMiddleware } from "./middleware";
 
 export class App {
   private app: express.Application;
+  private globalMiddleware: GlobalMiddleware;
 
   constructor() {
+    this.globalMiddleware = new GlobalMiddleware();
     this.app = express();
     this.config();
+    this.globalMiddlewares();
     this.routes();
     this.handleError();
   }
@@ -38,6 +42,10 @@ export class App {
     this.app.use(cors(options));
   }
 
+  private globalMiddlewares(): void {
+    const globalMiddlewares = this.globalMiddleware.getGlobalMiddlewares();
+    this.app.use(globalMiddlewares);
+  }
   private routes(): void {
     
     this.app.get("/health", (
@@ -55,12 +63,12 @@ export class App {
         _req: express.Request,
         _res: express.Response,
         next: express.NextFunction
-      ) => next(new Errors(ErrorCode.API_NOT_FOUND))
+      ) => next(new BaseError(ErrorCode.API_NOT_FOUND))
     );
     // error handler
     this.app.use(
       (
-        err: Errors,
+        err: BaseError,
         _req: express.Request,
         res: express.Response,
         _next: express.NextFunction

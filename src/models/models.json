@@ -1,0 +1,152 @@
+{
+  "models": [
+    {
+      "name": "Role",
+      "table": "role",
+      "attributes": {
+        "id": {
+          "type": "BIGINT",
+          "autoIncrement": true,
+          "primaryKey": true,
+          "field": "id"
+        },
+        "name": {
+          "type": "STRING",
+          "allowNull": false,
+          "unique": true,
+          "field": "name"
+        },
+        "acl": {
+          "type": "JSON",
+          "allowNull": false,
+          "field": "acl",
+          "defaultValue": {
+            "public": {
+              "read": true,
+              "write": true, 
+              "delete": true
+            }
+          }
+        }
+      },
+      "associations": [
+        { 
+          "type": "hasMany", 
+          "model": "UserRole", 
+          "foreignKey": "role_id",
+          "as": "UserRoles"
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "table": "user",
+      "attributes": {
+        "id": {
+          "type": "BIGINT",
+          "autoIncrement": true,
+          "primaryKey": true,
+          "field": "id"
+        },
+        "email": {
+          "type": "STRING",
+          "allowNull": false,
+          "unique": true,
+          "field": "email"
+        },
+        "username": {
+          "type": "STRING",
+          "allowNull": false,
+          "unique": true,
+          "field": "username"
+        },
+        "isVerifiedEmail": {
+          "type": "BOOLEAN",
+          "allowNull": true,
+          "field": "is_verified_email"
+        },
+        "password": {
+          "type": "STRING",
+          "allowNull": false,
+          "field": "password"
+        },
+        "acl": {
+          "type": "JSON",
+          "allowNull": false,
+          "field": "acl",
+          "defaultValue": {
+            "public": {
+              "read": true,
+              "write": true, 
+              "delete": true
+            }
+          }
+        }
+      },
+      "associations": [
+        { 
+          "type": "hasMany", 
+          "model": "UserRole", 
+          "foreignKey": "user_id",
+          "as": "UserRoles"
+        }
+      ]
+    },
+    {
+      "name": "UserRole",
+      "table": "user_role",
+      "attributes": {
+        "id": {
+          "type": "BIGINT",
+          "autoIncrement": true,
+          "primaryKey": true,
+          "field": "id"
+        },
+        "roleId": {
+          "allowNull": false,
+          "type": "BIGINT",
+          "field": "role_id",
+          "references": {
+            "model": "role",
+            "key": "id"
+          }
+        },
+        "userId": {
+          "allowNull": false,
+          "type": "BIGINT",
+          "field": "user_id",
+          "references": {
+            "model": "user",
+            "key": "id"
+          }
+        },
+        "acl": {
+          "type": "JSON",
+          "allowNull": false,
+          "field": "acl",
+          "defaultValue": {
+            "public": {
+              "read": true,
+              "write": true, 
+              "delete": true
+            }
+          }
+        }
+      },
+      "associations": [
+        { 
+          "type": "belongsTo", 
+          "model": "Role", 
+          "foreignKey": "role_id",
+          "as": "Role"
+        },
+        { 
+          "type": "belongsTo", 
+          "model": "User", 
+          "foreignKey": "user_id",
+          "as": "User"
+        }
+      ]
+    }
+  ]
+}

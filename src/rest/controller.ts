@@ -1,14 +1,14 @@
 import { Request, Response } from "express";
 import { models } from "@models/index";
-import { BaseRepository } from "src/repository/base-repository";
+import { RestRepository } from "./repository";
+import { ParseRequest } from "./interface";
 
-const getEntities = async (req: Request<{tableName: string}>, res: Response) => {
-  const tableName = req.params.tableName;
-  const model = models[tableName];
-
-  // @ts-ignore:next-line
-  const repository = new BaseRepository(model);
-  const results = await repository.find();
+const getEntities = async (req: ParseRequest<{classes: string}>, res: Response) => {
+  const classes = req.params.classes;
+  const model = models.getModel(classes);
+  const findOptions = RestRepository.parseQuery(req.query);
+  const repository = new RestRepository(model);
+  const results = await repository.find(findOptions);
 
   return res.json(results)
 };

@@ -1,7 +1,7 @@
 import "module-alias/register";
 import http from "http";
 import { App } from "./rest";
-import logger from "@utilities/logger";
+import { logger } from "@utilities/logger";
 
 const app = new App().getApplication();
 

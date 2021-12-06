@@ -1,9 +1,45 @@
-import { QueryOptions, Sequelize, Dialect } from "sequelize";
-import logger from "@utilities/logger";
-import { ErrorCode, Errors } from "src/utilities/error";
+import { QueryOptions, Sequelize, Dialect, Op } from "sequelize";
+import { logger } from "@utilities/logger";
+import { ErrorCode, BaseError } from "src/utilities/error";
 
 let sequelizeClientInstance: Sequelize;
 
+const operatorsAliases = {
+  $eq: Op.eq,
+  $ne: Op.ne,
+  $gte: Op.gte,
+  $gt: Op.gt,
+  $lte: Op.lte,
+  $lt: Op.lt,
+  $not: Op.not,
+  $in: Op.in,
+  $notIn: Op.notIn,
+  $is: Op.is,
+  $like: Op.like,
+  $notLike: Op.notLike,
+  $iLike: Op.iLike,
+  $notILike: Op.notILike,
+  $regexp: Op.regexp,
+  $notRegexp: Op.notRegexp,
+  $iRegexp: Op.iRegexp,
+  $notIRegexp: Op.notIRegexp,
+  $between: Op.between,
+  $notBetween: Op.notBetween,
+  $overlap: Op.overlap,
+  $contains: Op.contains,
+  $contained: Op.contained,
+  $adjacent: Op.adjacent,
+  $strictLeft: Op.strictLeft,
+  $strictRight: Op.strictRight,
+  $noExtendRight: Op.noExtendRight,
+  $noExtendLeft: Op.noExtendLeft,
+  $and: Op.and,
+  $or: Op.or,
+  $any: Op.any,
+  $all: Op.all,
+  $values: Op.values,
+  $col: Op.col
+};
 const sequelizeInstance = ({
   dialect,
   db,
@@ -26,7 +62,7 @@ const sequelizeInstance = ({
       dialect,
       retry: {
         match: [/Deadlock/i],
-        max: 2, // Maximum rety 3 times
+        max: 3, // Maximum rety 3 times
       },
       pool: {
         max: 10,
@@ -35,18 +71,21 @@ const sequelizeInstance = ({
         idle: 60000
       },
       define: {
-        underscored: false,
+        underscored: true,
         freezeTableName: true,
         charset: "utf8",
         collate: "utf8_general_ci"
       },
-      logging: console.log
+      operatorsAliases: operatorsAliases,
+      logging: process.env.NODE_ENV === 'production'
+        ? false
+        : console.log
     });
   }
   return sequelizeClientInstance;
 };
 
-export class SqlProvider {
+class SqlProvider {
   private readonly sequelizeClient: Sequelize;
   private readonly region: string = process.env.DB_REGION;
   private readonly dialect: Dialect = process.env.DB_DIALECT as Dialect|| "mysql";
@@ -89,7 +128,9 @@ export class SqlProvider {
       return response;
     } catch (errors) {
       logger.error("errors-query:", errors);
-      throw new Errors(ErrorCode.INTERNAL_SERVER_ERROR);
+      throw new BaseError(ErrorCode.INTERNAL_SERVER_ERROR);
     }
   }
 }
+
+export const sqlProvider = new SqlProvider();
