@@ -62,7 +62,7 @@ const sequelizeInstance = ({
       dialect,
       retry: {
         match: [/Deadlock/i],
-        max: 3, // Maximum rety 3 times
+        max: 5, // Maximum rety 3 times
       },
       pool: {
         max: 10,

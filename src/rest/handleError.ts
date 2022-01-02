@@ -1,26 +1,43 @@
 
 import { NextFunction, Request, Response, Router } from "express";
 import { BaseError, ErrorCode } from '@utilities/error';
+import { models } from "@models/index";
 import { logger } from '@utilities/logger';
-
+import { ParseRequest } from "./interface";
 class ErrorHandler {
-  private async handleError(req: Request, res: Response, err: any): Promise<void> {
-    const method = req.method;
-    const baseUrl = req.baseUrl;
-    const input = method === 'get' ? req.query : req.body;
-    logger.error(`Error ${err.message}`, { method, baseUrl, input, stack : err.stack });
+  public async handleError(
+    req: ParseRequest, 
+    res: Response, 
+    err: any
+  ): Promise<Response<any, Record<string, any>>> {
+    const trace = {
+      userId: req.user?.id,
+      method: req.method,
+      endpoint: req.originalUrl,
+      params: req.method === 'GET' ? req.query : req.body,
+      reason: err.message,
+      stack : err.stack,
+      status: err.status || 500,
+      headers: req.headers,
+      clientIp: req.headers['x-forwarded-for'] || req.connection.remoteAddress,
+      timeResponse: (new Date()).getTime() - req.startTime,
+    }
+   
+    logger.error(`Error`, trace);
+    const traceLog = models.getModel('TraceLog');
+    traceLog.create(trace);
     // await sendMailToAdminIfCritical();
     // await sendEventsToSentry();
+    res.status(err.status || 500);
+    return res.json({ message: err.message, code: err.code });
   }
 
   public asyncMiddleware = (fn: Function) => (
-    req: Request,
+    req: ParseRequest,
     res: Response,
     next: NextFunction
   ) => {
     Promise.resolve(fn(req, res, next)).catch(error => {
-      logger.error(error.message, { stack : error.stack });
-      this.handleError(req, res, error);
       const err = (error instanceof BaseError) 
         ? error
         : new BaseError(

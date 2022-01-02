@@ -38,7 +38,7 @@ class CommonMiddleware {
     _res: Response,
     next: NextFunction,
   ) {
-    req.startTime = new Date();
+    req.startTime = (new Date()).getTime();
     return next();
   }
 }

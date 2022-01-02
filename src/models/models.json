@@ -147,6 +147,106 @@
           "as": "User"
         }
       ]
+    },
+    {
+      "name": "ClassPermission",
+      "table": "class_permission",
+      "attributes": {
+        "id": {
+          "type": "BIGINT",
+          "autoIncrement": true,
+          "primaryKey": true,
+          "field": "id"
+        },
+        "class": {
+          "allowNull": false,
+          "type": "STRING",
+          "field": "class"
+        },
+        "permission": {
+          "allowNull": false,
+          "type": "JSON",
+          "field": "permission"
+        }
+      }
+    },
+    {
+      "name": "TraceLog",
+      "table": "trace_log",
+      "attributes": {
+        "id": {
+          "type": "BIGINT",
+          "autoIncrement": true,
+          "primaryKey": true,
+          "field": "id"
+        },
+        "method": {
+          "allowNull": false,
+          "type": "STRING",
+          "field": "method"
+        },
+        "endpoint": {
+          "allowNull": false,
+          "type": "STRING",
+          "field": "endpoint"
+        },
+        "reason": {
+          "allowNull": true,
+          "type": "STRING",
+          "field": "reason"
+        },
+        "stack": {
+          "allowNull": true,
+          "type": "STRING",
+          "field": "stack"
+        },
+        "status": {
+          "allowNull": true,
+          "type": "INTEGER",
+          "field": "status"
+        },
+        "timeResponse": {
+          "allowNull": true,
+          "type": "INTEGER",
+          "field": "time_response"
+        },
+        "headers": {
+          "allowNull": false,
+          "type": "JSON",
+          "field": "headers"
+        },
+        "clientIp": {
+          "allowNull": false,
+          "type": "STRING",
+          "field": "client_ip"
+        },
+        "params": {
+          "allowNull": false,
+          "type": "JSON",
+          "field": "params"
+        },
+        "userId": {
+          "allowNull": true,
+          "type": "BIGINT",
+          "field": "user_id",
+          "references": {
+            "model": "user",
+            "key": "id"
+          }
+        },
+        "acl": {
+          "type": "JSON",
+          "allowNull": false,
+          "field": "acl",
+          "defaultValue": {
+            "public": {
+              "read": true,
+              "write": true, 
+              "delete": true
+            }
+          }
+        }
+      }
     }
   ]
 }

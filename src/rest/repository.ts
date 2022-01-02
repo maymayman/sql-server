@@ -10,14 +10,7 @@ export class RestRepository<M extends Model<M, M>> extends BaseRepository<M> {
     super(entityModel);
   }
 
-  static parseQuery(query: core.Query): ParseQuery {
-    const where = query.where ? JSON.parse(query.where as string) : {};
-    const limit = query.limit ? Number(query.limit) : undefined;
-    const offset = query.limit ? Number(query.offset) : undefined;
-
-    return { where, limit, offset };
-  }
-  public async find(findOptions: any = {}, options: any = {}): Promise<M[]> {
-    return super.find(findOptions, options);
+  public async find(query: core.Query, options: any = {}): Promise<M[]> {
+    return super.find(query, options);
   }
 }

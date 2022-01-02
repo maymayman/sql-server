@@ -1,8 +1,23 @@
-import { FindOptions, Model, ModelCtor } from "sequelize";
+import { FindOptions, Model, ModelCtor, WhereOptions } from "sequelize";
+import { models } from "../models";
+import isArray from "lodash/isArray";
+import isPlainObject from "lodash/isPlainObject";
+
 const DEFAULT_LIMIT = 20;
 const DEFAULT_OFFSET = 0;
 const MAX_LIMIT = 1000;
 
+export interface ParseQuery {
+  where: WhereOptions;
+  limit: number;
+  offset: number;
+  include: ParseInclude[]
+};
+
+interface ParseInclude {
+  model: ModelCtor<Model<any, any>>;
+  as: string;
+}
 // /**
 //    * Create a new record
 //    * @param dataObject - The data to be created
@@ -61,17 +76,45 @@ export class BaseRepository<M extends Model<M>> {
     private readonly entityModel: ModelCtor<M>,
   ) {}
 
+  private parseIncludes(include: any[]): ParseInclude[] {
+    const includes: ParseInclude[] = [];
+    if (!isArray(include)) throw new Error(`include Is Not Array`);
+    if (!include.length) return []; 
+    include.forEach(el => {
+      if (!el.model) throw new Error(`No Model Include`);
+      const model = models.getModel(el.model);
+      if (!model) throw new Error(`Model ${el.model} Not Found`);
+
+      const as = el.as || el.model as string;
+      includes.push({ model, as });
+    });
+
+    return includes;
+  }
+  private parseInclude(include: any): ParseInclude[] {
+    if (isArray(include)) return this.parseIncludes(include);
+    if (isPlainObject(include)) return this.parseIncludes([include]);
+    throw new Error(`include Invalid Data`);
+  }
+
+  private parseQuery(query: any): ParseQuery {
+    const where = query.where ? JSON.parse(query.where as string) : {};
+    const limit = query.limit ? Number(query.limit) : undefined;
+    const offset = query.limit ? Number(query.offset) : undefined;
+    const include = query.include ? JSON.parse(query.include as string) : [];
+
+    return { where, limit, offset, include: this.parseInclude(include) };
+  }
   /**
    * Find matching records
    * @param findOptions - Find Options <Model>
    * @param options - Options for the operations
    * @returns A promise of an array of records found
    */
-  public async find(findOptions?: FindOptions<M>, options?: any): Promise<M[]> {
+  public async find(query?: any, options?: any): Promise<M[]> {
+    const findOptions = this.parseQuery(query);
     const limit = findOptions.limit 
-      ? findOptions.limit > MAX_LIMIT 
-        ? MAX_LIMIT 
-        : findOptions.limit
+      ? findOptions.limit > MAX_LIMIT ? MAX_LIMIT : findOptions.limit
       : DEFAULT_LIMIT
     const offset = findOptions.offset ? findOptions.offset : DEFAULT_OFFSET
     const result = await this.entityModel.findAll({

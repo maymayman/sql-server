@@ -1,9 +1,8 @@
-import { Router, Request } from "express";
+import { Router } from "express";
 import { errorHandler } from "./handleError";
 import { getEntities } from './controller';
 
 const router = Router();
-
 
 router.get(
   "/classes/:classes",

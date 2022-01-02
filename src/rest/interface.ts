@@ -10,7 +10,7 @@ export interface ParseRequest<
   Locals extends Record<string, any> = Record<string, any>
 > extends Request<P, ResBody, ReqBody, ReqQuery, Locals> {
   user?: { id: number };
-  startTime: Date;
+  startTime: number;
 };
 
 export interface ParseQuery {

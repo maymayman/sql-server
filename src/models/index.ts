@@ -20,39 +20,6 @@ import { DataTypes, Model, ModelAttributes, ModelCtor } from "sequelize";
 import { sqlProvider } from "src/provider/sql-provider";
 import jsonModels from "./models.json";
 
-const dataTypes = {
-  "BIGINT": DataTypes.BIGINT,
-  "STRING": DataTypes.STRING,
-  "JSON": DataTypes.JSON,
-  "BOOLEAN": DataTypes.BOOLEAN,
-};
-
-// const models: { [key: string]: ModelCtor<Model<any, any>>; } = {};
-
-// jsonModels.models.forEach((jsonModel) => {
-//   const attributes = jsonModel.attributes;
-//   const schema = {};
-
-//   for (const key in attributes) {
-//     // @ts-ignore:next-line
-//     const attribute = attributes[key];
-//     const type = attribute.type;
-//     // @ts-ignore:next-line
-//     schema[key] = { ...attribute, type: dataTypes[type] };
-//   }
-//   sequelize.define(
-//     jsonModel.name, 
-//     schema,
-//     {
-//       tableName: jsonModel.table,
-//       timestamps: true,
-//     }
-//   );
-
-//   sequelize.models[jsonModel.name].sync({ alter: true });
-//   models[jsonModel.endpoint] = sequelize.models[jsonModel.name];
-// });
-
 type typeofDataType = "BIGINT" | "STRING" | "JSON" | "BOOLEAN";
 class SQLModel {
   static dataTypes = {
@@ -60,17 +27,48 @@ class SQLModel {
     "STRING": DataTypes.STRING,
     "JSON": DataTypes.JSON,
     "BOOLEAN": DataTypes.BOOLEAN,
+    "INTEGER": DataTypes.INTEGER
   };
 
-  private models: { [key: string]: ModelCtor<Model<any, any>>; };;
+  // private models: { [key: string]: ModelCtor<Model<any, any>>; };;
   private sqlProvider;
   private sequelize;
+  private jsonSchema: any;
+  private isMigrated: boolean = false;
   constructor() {
     this.sqlProvider = sqlProvider;
     this.sequelize = this.sqlProvider.sequelize();
-    this.models = {};
-    this.initialize();
-    this.associate()
+  
+    this.initSchemaJson().then(() => {
+      this.initialize();
+      this.associate();
+    });
+  }
+
+  private async initSchemaJson(): Promise<void> {
+    const schema = {
+      metadata: {
+        type: DataTypes.JSON,
+        allowNull: false,
+        field: "metadata",
+      }
+    };
+    this.sequelize.define('Schema', schema, { 
+      tableName: 'schema',
+      timestamps: true,
+      paranoid: true,
+    });
+    const schemaModel = this.sequelize.models['Schema'];
+    await schemaModel.sync({ alter: true });
+    let schemaJson = await schemaModel.findOne();
+    // @ts-ignore:next-line
+    if (!schemaJson || !schemaJson.metadata) {
+      schemaJson = await schemaModel.create({ metadata: jsonModels });
+    } else {
+      this.isMigrated = true;
+    }
+    // @ts-ignore:next-line
+    this.jsonSchema = schemaJson.metadata;
   }
 
   private initializeSchema(jsonModel: any): ModelAttributes {
@@ -80,40 +78,43 @@ class SQLModel {
     for (const key in attributes) {
       const attribute = attributes[key];
       const type = attribute.type as typeofDataType;
-      schema[key] = { ...attribute, type: dataTypes[type] };
+      schema[key] = { ...attribute, type: SQLModel.dataTypes[type] };
     }
 
     return schema;
   }
 
   private initialize() {
-    jsonModels.models.forEach((jsonModel) => {
+    this.jsonSchema.models.forEach(async (jsonModel: any) => {
       const modelName = jsonModel.name;
       const tableName = jsonModel.table;
-      const options = { tableName, timestamps: true, };
+      const options = { tableName, timestamps: true, paranoid: true, };
       const schema = this.initializeSchema(jsonModel);
       
       this.sequelize.define(modelName, schema, options );
-      // this.models[jsonModel.endpoint] = this.sequelize.models[jsonModel.name];
 
-      // this.sequelize.models[jsonModel.name].sync({ alter: true });
+      if (!this.isMigrated) {
+        await this.sequelize.models[jsonModel.name].sync({ alter: true });
+      }
     });
+    this.isMigrated = true;
   }
 
   private associate() {
     jsonModels.models.forEach((jsonModel) => {
       const associations = jsonModel.associations;
-      associations.forEach((association) => {
-        const type = association.type;
-        const model = this.sequelize.models[jsonModel.name];
-        const modelReference = this.sequelize.models[association.model]; 
-        const foreignKey= association.foreignKey;
-        const as = association.as;
-
-        // @ts-ignore:next-line
-        model[type](modelReference, { foreignKey, as })
-      })
-
+      if (associations && associations.length) {
+        associations.forEach((association) => {
+          const type = association.type;
+          const model = this.sequelize.models[jsonModel.name];
+          const modelReference = this.sequelize.models[association.model]; 
+          const foreignKey= association.foreignKey;
+          const as = association.as;
+  
+          // @ts-ignore:next-line
+          model[type](modelReference, { foreignKey, as })
+        })
+      }
     });
   }
 

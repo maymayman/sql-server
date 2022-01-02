@@ -4,6 +4,8 @@ import { ErrorCode, BaseError } from "@utilities/error";
 import { logger } from "@utilities/logger";
 import {router as api} from './api';
 import { GlobalMiddleware } from "./middleware";
+import { errorHandler } from "./handleError";
+import { ParseRequest } from "./interface";
 
 export class App {
   private app: express.Application;
@@ -24,14 +26,14 @@ export class App {
     this.app.use(express.urlencoded({ extended: false }));
 
     const options: cors.CorsOptions = {
-      allowedHeaders: [
-        "Origin",
-        "X-Requested-With",
-        "Content-Type",
-        "Accept",
-        "X-Access-Token",
-        "Authorization",
-      ],
+      // allowedHeaders: [
+      //   "Origin",
+      //   "X-Requested-With",
+      //   "Content-Type",
+      //   "Accept",
+      //   "X-Access-Token",
+      //   "Authorization",
+      // ],
       credentials: true,
       methods: "GET,OPTIONS,PUT,PATCH,POST,DELETE",
       origin: "*",
@@ -46,8 +48,9 @@ export class App {
     const globalMiddlewares = this.globalMiddleware.getGlobalMiddlewares();
     this.app.use(globalMiddlewares);
   }
+
   private routes(): void {
-    
+    this.app.use(require('express-status-monitor')());
     this.app.get("/health", (
       req: express.Request,
       res: express.Response
@@ -69,19 +72,10 @@ export class App {
     this.app.use(
       (
         err: BaseError,
-        _req: express.Request,
+        req: ParseRequest,
         res: express.Response,
         _next: express.NextFunction
-      ) => {
-        logger.error(err.message);
-        // set locals, only providing error in development
-        // res.locals.message = err.message;
-        // res.locals.error = err;
-
-        // render the error page
-        res.status(err.status || 500);
-        res.json({ message: err.message, code: err.code });
-      }
+      ) => errorHandler.handleError(req, res, err)
     );
   }
 
