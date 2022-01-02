@@ -2,6 +2,7 @@ import { FindOptions, Model, ModelCtor, WhereOptions } from "sequelize";
 import { models } from "../models";
 import isArray from "lodash/isArray";
 import isPlainObject from "lodash/isPlainObject";
+import { BaseError, ErrorCode } from "@utilities/error";
 
 const DEFAULT_LIMIT = 20;
 const DEFAULT_OFFSET = 0;
@@ -73,7 +74,7 @@ interface ParseInclude {
 
 export class BaseRepository<M extends Model<M>> {
   constructor(
-    private readonly entityModel: ModelCtor<M>,
+    private readonly classModel: ModelCtor<M>,
   ) {}
 
   private parseIncludes(include: any[]): ParseInclude[] {
@@ -117,11 +118,35 @@ export class BaseRepository<M extends Model<M>> {
       ? findOptions.limit > MAX_LIMIT ? MAX_LIMIT : findOptions.limit
       : DEFAULT_LIMIT
     const offset = findOptions.offset ? findOptions.offset : DEFAULT_OFFSET
-    const result = await this.entityModel.findAll({
+    const result = await this.classModel.findAll({
       ...findOptions,
       limit,
       offset
     });
+
+    return result;
+  }
+
+  public async findByPk(id: number, query?: any, options?: any): Promise<M> {
+    const findOptions = this.parseQuery(query);
+    const result = await this.classModel.findByPk(id, findOptions);
+
+    return result;
+  }
+
+  public async create(body: any = {}, options?: any): Promise<M> {
+    const ClassModel = this.classModel;
+    // @ts-ignore
+    const classModel = new ClassModel(body);
+    const result = await classModel.save();
+
+    return result;
+  }
+
+  public async updateByPk(id: number, body: any = {}, options?: any): Promise<M> {
+    const record = await this.findByPk(id);
+    if (!record) throw new BaseError(ErrorCode.CLASS_NOT_FOUND);
+    const result = await record.set(body).save();
 
     return result;
   }

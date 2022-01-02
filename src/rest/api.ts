@@ -1,12 +1,22 @@
 import { Router } from "express";
 import { errorHandler } from "./handleError";
-import { getEntities } from './controller';
+import { getClasses, getClass, createClass } from './controller';
 
 const router = Router();
 
 router.get(
   "/classes/:classes",
-  errorHandler.asyncMiddleware(getEntities)
+  errorHandler.asyncMiddleware(getClasses)
+);
+
+router.get(
+  "/classes/:classes/:id",
+  errorHandler.asyncMiddleware(getClass)
+);
+
+router.post(
+  "/classes/:classes",
+  errorHandler.asyncMiddleware(createClass)
 );
 
 export { router };

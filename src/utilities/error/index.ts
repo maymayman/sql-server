@@ -6,13 +6,13 @@ export enum StatusCode {
 
 export enum ErrorCode {
   API_NOT_FOUND = 4000,
-  ENTITY_NOT_FOUND = 4001,
+  CLASS_NOT_FOUND = 4001,
   INTERNAL_SERVER_ERROR = 5000,
 };
 
 export const ErrorMessage = {
   [ErrorCode.API_NOT_FOUND]: 'API Not Found',
-  [ErrorCode.ENTITY_NOT_FOUND]: 'Entity Not Found',
+  [ErrorCode.CLASS_NOT_FOUND]: 'Class Not Found',
   [ErrorCode.INTERNAL_SERVER_ERROR]: 'Internal Server Error',
 };
 
@@ -22,10 +22,10 @@ export const ErrorMessages = {
     message: ErrorMessage[ErrorCode.API_NOT_FOUND],
     errorCode: ErrorCode.API_NOT_FOUND
   },
-  [ErrorCode.ENTITY_NOT_FOUND]: {
+  [ErrorCode.CLASS_NOT_FOUND]: {
     statusCode: StatusCode.NOT_FOUND,
-    message: ErrorMessage[ErrorCode.ENTITY_NOT_FOUND],
-    errorCode: ErrorCode.ENTITY_NOT_FOUND
+    message: ErrorMessage[ErrorCode.CLASS_NOT_FOUND],
+    errorCode: ErrorCode.CLASS_NOT_FOUND
   },
   [ErrorCode.INTERNAL_SERVER_ERROR]: {
     statusCode: StatusCode.INTERNAL_SERVER_ERROR,
