@@ -5,6 +5,7 @@ import {
 	transports,
 	addColors
 } from "winston";
+require('winston-daily-rotate-file');
 
 const nodeEnv = process.env.NODE_ENV;
 const customLevels = {
@@ -43,9 +44,12 @@ class Logger {
 	private logger: LoggerInstance;
 
 	constructor() {
-		const isProd = nodeEnv !== 'production';
-		const prodTransport = new transports.File({
-			filename: 'logs/error.log',
+		const isProd = nodeEnv == 'production';
+		// @ts-ignore
+		const prodTransport = new transports.DailyRotateFile({
+			filename: 'logs/application-%DATE%.log',
+			datePattern: 'YYYY-MM-DD-HH',
+    	zippedArchive: true,
 			level: 'error',
 		});
 		const transport = new transports.Console({
@@ -54,7 +58,7 @@ class Logger {
 		this.logger = createLogger({
 			level: isProd ? 'trace' : 'error',
 			levels: customLevels.levels,
-			transports: [isProd ? transport : prodTransport],
+			transports: isProd ? [prodTransport] : [prodTransport, transport],
 		});
 		addColors(customLevels.colors);
 	}

@@ -32,7 +32,8 @@
     "module-alias": "^2.2.2",
     "mysql2": "^2.3.3-rc.0",
     "sequelize": "^6.9.0",
-    "winston": "^3.3.3"
+    "winston": "^3.3.3",
+    "winston-daily-rotate-file": "^4.5.5"
   },
   "devDependencies": {
     "@types/cors": "^2.8.12",

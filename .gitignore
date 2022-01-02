@@ -51,3 +51,6 @@ Thumbs.db
 # Settings related to formatting
 .prettierrc.json
 .vscode/settings.json
+
+# log folder
+logs
